@@ -1,5 +1,5 @@
 import { UUIDVersion } from 'class-validator';
-import { User } from 'src/auth/User.Entity';
+import { User } from 'src/auth/entities/User.Entity';
 import {
   AfterInsert,
   AfterRemove,

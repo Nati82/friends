@@ -3,7 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
-import { User } from './auth/User.Entity';
+import { User } from './auth/entities/User.Entity';
 import { UserModule } from './user/user.module';
 import { Friend } from './user/entities/Friend.Entity';
 import { FriendRequest } from './user/entities/FriendRequest.Entity';
@@ -21,7 +21,7 @@ import { FriendRequest } from './user/entities/FriendRequest.Entity';
       entities: [User, Friend, FriendRequest],
       synchronize: true,
     }),
-    UserModule
+    UserModule,
   ],
   controllers: [AppController],
   providers: [AppService],

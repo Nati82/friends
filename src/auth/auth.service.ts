@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { Like, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { User } from './User.Entity';
+import { User } from './entities/User.Entity';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { isUUID, UUIDVersion } from 'class-validator';
 
