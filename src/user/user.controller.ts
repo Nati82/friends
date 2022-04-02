@@ -3,13 +3,11 @@ import {
   Controller,
   Delete,
   Get,
-  Param,
   Post,
   Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { UUIDVersion } from 'class-validator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AddFriendDto } from './dtos/add-friend.dto';
 import { Friend } from './entities/Friend.Entity';

@@ -7,6 +7,8 @@ import { User } from './auth/entities/User.Entity';
 import { UserModule } from './user/user.module';
 import { Friend } from './user/entities/Friend.Entity';
 import { FriendRequest } from './user/entities/FriendRequest.Entity';
+import { MessageModule } from './message/message.module';
+import { Message } from './message/entities/Message.Entity';
 
 @Module({
   imports: [
@@ -18,10 +20,11 @@ import { FriendRequest } from './user/entities/FriendRequest.Entity';
       username: 'postgres',
       password: 'postgres',
       database: 'friends',
-      entities: [User, Friend, FriendRequest],
+      entities: [User, Friend, FriendRequest, Message],
       synchronize: true,
     }),
     UserModule,
+    MessageModule,
   ],
   controllers: [AppController],
   providers: [AppService],
