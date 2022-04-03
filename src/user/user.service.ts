@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, Req } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UUIDVersion } from 'class-validator';
 import { AuthService } from 'src/auth/auth.service';
@@ -90,6 +90,21 @@ export class UserService {
         },
         {
           acceptedBy: friendId,
+        },
+      ],
+    });
+  }
+
+  async friendsWithMessage(sentBy: UUIDVersion, sentTo: UUIDVersion) {
+    return this.friend.findOne({
+      where: [
+        {
+          acceptedBy: sentTo,
+          addedBy: sentBy,
+        },
+        {
+          acceptedBy: sentBy,
+          addedBy: sentTo,
         },
       ],
     });

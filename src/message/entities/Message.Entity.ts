@@ -1,6 +1,6 @@
 import { UUIDVersion } from 'class-validator';
+import { User } from 'src/auth/entities/User.Entity';
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
-import { Friend } from '../../user/entities/Friend.Entity';
 
 @Entity('messages')
 export class Message {
@@ -13,6 +13,12 @@ export class Message {
   @Column()
   file: string;
 
-  @ManyToOne(() => Friend, (friend) => friend.id, { eager: true })
-  friend: UUIDVersion;
+  @Column('date')
+  date: Date;
+
+  @ManyToOne(() => User, (user) => user.id, { eager: true })
+  sentTo: UUIDVersion;
+
+  @ManyToOne(() => User, (user) => user.id, { eager: true })
+  sentBy: UUIDVersion;
 }

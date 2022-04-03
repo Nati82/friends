@@ -1,6 +1,8 @@
 import {
   Body,
   Controller,
+  Get,
+  Param,
   Post,
   Req,
   UploadedFiles,
@@ -17,6 +19,7 @@ import { MessageService } from './message.service';
 export class MessageController {
   constructor(private messageService: MessageService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Post('sendMessage')
   @UseInterceptors(
     FilesInterceptor(
@@ -28,13 +31,24 @@ export class MessageController {
       // }
     ),
   )
-  @UseGuards(JwtAuthGuard)
   async sendMessage(
     @Req() req: any,
     @UploadedFiles() files: Array<Express.Multer.File>,
     @Body() request: MessageDto,
   ) {
-    const { fileValidationError } = req;
-    return this.messageService.sendMessage(fileValidationError, files, request);
+    const { fileValidationError, user } = req;
+    return this.messageService.sendMessage(
+      fileValidationError,
+      user,
+      files,
+      request,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('viewMessages/:page')
+  async viewMessages(@Req() req: any, @Param() page: number) {
+    const { id } = req.user;
+    return this.messageService.viewMessages(id, page);
   }
 }

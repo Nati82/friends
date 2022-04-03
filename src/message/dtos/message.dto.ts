@@ -8,5 +8,11 @@ export class MessageDto {
   message: string;
 
   @IsUUID()
-  friend: UUIDVersion;
+  sentTo: UUIDVersion;
+
+  @IsOptional()
+  sentBy: UUIDVersion;
+
+  @IsOptional()
+  date: Date;
 }
