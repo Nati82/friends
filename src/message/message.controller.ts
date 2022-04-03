@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -47,8 +48,15 @@ export class MessageController {
 
   @UseGuards(JwtAuthGuard)
   @Get('viewMessages/:page')
-  async viewMessages(@Req() req: any, @Param() page: number) {
+  async viewMessages(@Req() req: any, @Param('page') page: number) {
     const { id } = req.user;
+
+    if (isNaN(page)) {
+      throw new BadRequestException({
+        message: 'page must be a number!',
+      });
+    }
+
     return this.messageService.viewMessages(id, page);
   }
 }
