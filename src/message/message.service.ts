@@ -1,11 +1,13 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { UUIDVersion } from 'class-validator';
+import * as fs from 'fs';
+
 import { User } from 'src/auth/entities/User.Entity';
 import { UserService } from 'src/user/user.service';
-import { Repository } from 'typeorm';
-import { MessageDto } from './dtos/message.dto';
 
+import { MessageDto } from './dtos/message.dto';
 import { Message } from './entities/Message.Entity';
 
 @Injectable()
@@ -44,50 +46,54 @@ export class MessageService {
     files.forEach((f) => {
       fileName.push(f.filename);
     });
-    message.file = fileName.join(', ');
+    message.file = fileName
+      .map((f) => {
+        let userName = f.split('-')[1].split('.')[0];
+        let date = new Date(parseInt(f.split('-')[0]))
+          .toISOString()
+          .split('T')[0];
+        return `./files/${userName}/${date}/${f}`;
+      })
+      .join(', ');
     message.sentBy = id as UUIDVersion;
     message.date = new Date();
 
     const newFile = this.message.create(message);
 
-    return this.message.save(newFile);
-  }
+    const savedMessage = await this.message.save(newFile);
 
-  async viewMessages(userId: UUIDVersion, page: number) {
-    /*
-      load a hundred messages sorted in the order latest to old.
-      use a custom serializer to properly format the response object.
-      the object must show friends the user has chatted with with the latest message
-      included and it must be sorted latest to old.
-     */
-    let messages = await this.message.find({
-      order: {
-        date: 'DESC',
-      },
-      where: [
-        {
-          sentBy: userId,
-        },
-        {
-          sentTo: userId,
-        },
-      ],
-      take: 50,
-      skip: page * 50,
-    });
-
-    const friendsWithMessage = messages.map((m) => {
-      let files = m.file.split(',');
-      const file = files.map((f) => {
-        let username = f.split('-')[1].split('.')[0];
+    if (!savedMessage) {
+      savedMessage.file.split(',').forEach((f) => {
         let date = new Date(parseInt(f.split('-')[0]))
           .toISOString()
           .split('T')[0];
-        return `./files/${username}/${date}/${f}`;
+        fs.promises.rmdir(`./files/${username}/${date}/${f}`);
       });
-      return { ...m, file };
-    });
+      throw new BadRequestException({
+        message: 'message not sent. please try again',
+      });
+    }
 
-    return friendsWithMessage;
+    return savedMessage;
+  }
+
+  async viewFriendsWithMessage(userId: UUIDVersion, page: number) {
+    return this.message
+      .createQueryBuilder('messages')
+      .distinctOn(['messages.sentBy', 'messages.sentTo'])
+      .leftJoinAndSelect('messages.sentBy', 'sentBy')
+      .leftJoinAndSelect('messages.sentTo', 'sentTo')
+      .where('sentBy.id = :userId', { userId })
+      .orWhere('sentTo.id = :userId', { userId })
+      .take(50)
+      .skip((page - 1) * 50)
+      .getMany();
+  }
+
+  async viewMessages(friendId: UUIDVersion) {
+    /* 
+      This route must send 50 messages with a specific user
+      and pagination.
+     */
   }
 }

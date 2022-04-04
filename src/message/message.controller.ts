@@ -47,8 +47,8 @@ export class MessageController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('viewMessages/:page')
-  async viewMessages(@Req() req: any, @Param('page') page: number) {
+  @Get('viewFriendsWithMessage/:page')
+  async viewFriendsWithMessage(@Req() req: any, @Param('page') page: number) {
     const { id } = req.user;
 
     if (isNaN(page)) {
@@ -57,6 +57,6 @@ export class MessageController {
       });
     }
 
-    return this.messageService.viewMessages(id, page);
+    return this.messageService.viewFriendsWithMessage(id, page);
   }
 }
