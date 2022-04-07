@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { UUIDVersion } from 'class-validator';
 import * as fs from 'fs';
 
@@ -46,15 +46,14 @@ export class MessageService {
     files.forEach((f) => {
       fileName.push(f.filename);
     });
+
     message.file = fileName
       .map((f) => {
-        let userName = f.split('-')[1].split('.')[0];
-        let date = new Date(parseInt(f.split('-')[0]))
-          .toISOString()
-          .split('T')[0];
-        return `./files/${userName}/${date}/${f}`;
+        let date = new Date().toISOString().split('T')[0];
+        return `./files/${username}/${date}/${f}`;
       })
       .join(', ');
+
     message.sentBy = id as UUIDVersion;
     message.date = new Date();
 
@@ -64,10 +63,9 @@ export class MessageService {
 
     if (!savedMessage) {
       savedMessage.file.split(',').forEach((f) => {
-        let date = new Date(parseInt(f.split('-')[0]))
-          .toISOString()
-          .split('T')[0];
-        fs.promises.rmdir(`./files/${username}/${date}/${f}`);
+        const date = f.split('/')[3];
+        const file = f.split('/')[4];
+        fs.promises.rmdir(`./files/${username}/${date}/${file}`);
       });
       throw new BadRequestException({
         message: 'message not sent. please try again',
@@ -90,10 +88,50 @@ export class MessageService {
       .getMany();
   }
 
-  async viewMessages(friendId: UUIDVersion) {
+  async viewMessages(userId: UUIDVersion, friendId: UUIDVersion, page: number) {
     /* 
       This route must send 50 messages with a specific user
       and pagination.
      */
+
+    return this.message
+      .createQueryBuilder('messages')
+      .where('messages.sentBy.id = :userId', { userId })
+      .andWhere('messages.sentTo.id = :friendId', { friendId })
+      .orderBy('messages.date', 'DESC')
+      .take(50)
+      .skip((page - 1) * 50)
+      .getMany();
+  }
+
+  async editMessage(messageId: UUIDVersion, message: string) {
+    console.log('message', message, '\n', 'messageId', messageId);
+    const { affected } = await this.message
+      .createQueryBuilder('messages')
+      .update()
+      .set({
+        message,
+      })
+      .where('id= :messageId', { messageId })
+      .execute();
+
+    return affected ? 'update successful' : 'update unsuccessful';
+  }
+
+  async deleteMessage(username: string, messageId: UUIDVersion[]) {
+    const messages = await this.message.find({ id: In(messageId) });
+    messages.forEach((m) => {
+      m.file.split(',').forEach(async (f) => {
+        const date = f.split('/')[3];
+        const file = f.split('/')[4];
+        await fs.promises.rm(`./files/${username}/${date}/${file}`, {
+          recursive: true,
+          force: true,
+        });
+      });
+    });
+    const { affected } = await this.message.delete({ id: In(messageId) });
+
+    return affected ? 'delete successful' : 'delete unsuccessful';
   }
 }

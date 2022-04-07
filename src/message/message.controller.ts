@@ -2,8 +2,10 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   Param,
+  Patch,
   Post,
   Req,
   UploadedFiles,
@@ -11,8 +13,11 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import { UUIDVersion } from 'class-validator';
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { DeleteMessageDto } from './dtos/deleteMessages.dto';
+import { EditMessageDto } from './dtos/editMessage.dto';
 import { MessageDto } from './dtos/message.dto';
 import { MessageService } from './message.service';
 
@@ -58,5 +63,32 @@ export class MessageController {
     }
 
     return this.messageService.viewFriendsWithMessage(id, page);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('viewMessages/:page/:friendId')
+  async viewMessages(
+    @Req() req: any,
+    @Param('page') page: number,
+    @Param('friendId') friendId: UUIDVersion,
+  ) {
+    const { id } = req.user;
+    return this.messageService.viewMessages(id, friendId, page);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('editMessage')
+  async editMessage(@Body() body: EditMessageDto) {
+    console.log('body', body);
+    const { messageId, message } = body;
+    return this.messageService.editMessage(messageId, message);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('deleteMessages')
+  async deleteMessage(@Req() req: any, @Body() body: DeleteMessageDto) {
+    const { username } = req.user;
+    const { messages } = body;
+    return this.messageService.deleteMessage(username, messages);
   }
 }

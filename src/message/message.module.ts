@@ -15,7 +15,7 @@ import { UserModule } from 'src/user/user.module';
     TypeOrmModule.forFeature([Message]),
     MulterModule.register({
       storage: diskStorage({
-        destination: async function (req, file, cb) {
+        destination: async function (req, _file, cb) {
           const user = req.user['username'];
           const date = new Date().toISOString().split('T')[0];
           await fs.promises.mkdir(`./files/${user}/${date}`, {
@@ -23,10 +23,8 @@ import { UserModule } from 'src/user/user.module';
           });
           cb(null, `./files/${user}/${date}`);
         },
-        filename: (req, file, cb) => {
-          const user = req.user['username'];
-          let type = file.originalname.split('.');
-          cb(null, `${Date.now()}-${user}.${type[type.length - 1]}`);
+        filename: (_req, file, cb) => {
+          cb(null, file.originalname);
         },
       }),
       fileFilter: function (req, file, cb) {
