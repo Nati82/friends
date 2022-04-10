@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { Like, Repository } from 'typeorm';
@@ -6,6 +10,7 @@ import * as bcrypt from 'bcrypt';
 import { User } from './entities/User.Entity';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { isUUID, UUIDVersion } from 'class-validator';
+import * as fs from 'fs';
 
 @Injectable()
 export class AuthService {
@@ -15,16 +20,47 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async signup(params: CreateUserDto): Promise<User> {
+  async signup(
+    fileValidationError: string,
+    file: Express.Multer.File,
+    params: CreateUserDto,
+  ) {
+    const userExists = await this.findOne(params.username);
+
+    if (userExists) {
+      throw new BadRequestException({
+        message: 'username already exists',
+      });
+    }
+    if (fileValidationError && fileValidationError.length) {
+      throw new BadRequestException({
+        message: fileValidationError,
+      });
+    }
+
+    params.profile =
+      file && file.filename ? `${file.destination}/${file.filename}` : '';
+
     const saltOrRounds = 10;
     const hash = await bcrypt.hash(params.password, saltOrRounds);
     params.password = hash;
-    const user = this.repo.create({ ...params });
-    console.log(user);
-    return this.repo.save(user);
+    const newUser = this.repo.create({ ...params });
+
+    const user = await this.repo.save(newUser);
+
+    if (user) return this.login(user);
+
+    await fs.promises.rm(`./files/${params.username}/profile`, {
+      recursive: true,
+      force: true,
+    });
+
+    throw new BadRequestException({
+      message: 'signup unsuccessful',
+    });
   }
 
-  async findOne(username: any): Promise<User> {
+  async findOne(username: any) {
     if (username.id && isUUID(username.id)) {
       const id = username.id as UUIDVersion;
       return this.repo.findOne(id);
@@ -40,33 +76,68 @@ export class AuthService {
     });
   }
 
-  async login(
-    newUser: User,
-  ): Promise<{ access_token: string; user: Partial<User> }> {
+  async login(newUser: User) {
     const { password, ...user } = newUser;
     const payload = { username: user.username, id: user.id };
     return {
       access_token: this.jwtService.sign(payload),
-      user,
+      ...user,
     };
   }
 
   async update(
     id: UUIDVersion,
+    fileValidationError: string,
+    file: Express.Multer.File,
     params: Partial<User>,
-  ): Promise<Partial<User> | string> {
+  ) {
+    const user = await this.repo.findOne(id);
+
     if (params.password) {
       const saltOrRounds = 10;
       const hash = await bcrypt.hash(params.password, saltOrRounds);
       params.password = hash;
     }
-    const { affected } = await this.repo.update(id, params);
 
-    if (affected > 0) return this.repo.findOne(id);
-    return 'update was unsuccessful';
+    if (fileValidationError && fileValidationError.length) {
+      throw new BadRequestException({
+        message: fileValidationError,
+      });
+    }
+
+    if (file && file.filename) {
+      const profile = user.profile.split(',');
+      profile.push(`files/${user.username}/${file.filename}`);
+      params.profile = profile.join(',');
+    }
+
+    const { affected } = await this.repo
+      .createQueryBuilder('users')
+      .update()
+      .set({
+        ...params,
+      })
+      .where('users.id = :id', { id })
+      .execute();
+    if (affected > 0) return this.login(user);
+    throw new BadRequestException({
+      message: 'update was unsuccessful',
+    });
   }
 
   async delete(id: UUIDVersion) {
-    return this.repo.delete(id);
+    const user = await this.repo.findOne(id);
+    const res = await this.repo.delete(id);
+    if (res.affected && res.affected > 0) {
+      await fs.promises.rm(`./files/${user.username}/profile`, {
+        recursive: true,
+        force: true,
+      });
+      return user;
+    }
+
+    throw new NotFoundException({
+      message: 'user not found',
+    });
   }
 }

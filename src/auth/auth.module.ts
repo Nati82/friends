@@ -9,10 +9,35 @@ import { JwtModule } from '@nestjs/jwt';
 import { LocalStrategy } from './strategies/local.strategy';
 import { jwtConstants } from './constants';
 import { JwtAuthService } from './jwt-auth.service';
+import * as fs from 'fs';
+import { MulterModule } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
+    MulterModule.register({
+      storage: diskStorage({
+        destination: async function (req, _file, cb) {
+          const user = req.body['username'];
+          await fs.promises.mkdir(`./files/${user}/profile`, {
+            recursive: true,
+          });
+          cb(null, `./files/${user}/profile`);
+        },
+        filename: (_req, file, cb) => {
+          cb(null, file.originalname);
+        },
+      }),
+      fileFilter: function (req, file, cb) {
+        if (!file.originalname.match(/\.(jpg|JPG|jpeg|JPEG|png|PNG)$/)) {
+          req.fileValidationError = 'only image files are allowed!';
+          return cb(null, false);
+        }
+
+        cb(null, true);
+      },
+    }),
     PassportModule,
     JwtModule.register({
       secret: jwtConstants.secret,

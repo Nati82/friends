@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UUIDVersion } from 'class-validator';
 import { AuthService } from 'src/auth/auth.service';
@@ -29,8 +33,13 @@ export class UserService {
       addedBy: addedById,
       requestedTo: requestedToId,
     };
-    const friendRequest = this.friendRequest.create(request);
-    return this.friendRequest.save(friendRequest);
+    const newFriend = this.friendRequest.create(request);
+
+    if (newFriend) return newFriend;
+
+    throw new BadRequestException({
+      message: 'create unsuccessful',
+    });
   }
 
   async getFriendRequests(requestedTo: UUIDVersion) {
@@ -49,14 +58,23 @@ export class UserService {
         acceptedBy: request.requestedTo.id as UUIDVersion,
       };
       const newFriend = this.friend.create(friend);
-      this.friendRequest.delete(id);
+      await this.friendRequest.delete(id);
       return this.friend.save(newFriend);
     }
-    throw new BadRequestException();
+    throw new BadRequestException({
+      message: 'accept friend request unsuccessful',
+    });
   }
 
   async denyRequest(id: UUIDVersion) {
-    return (await this.friendRequest.delete(id)).affected;
+    const deniedRequest = await this.friendRequest.findOne(id);
+    const { affected } = await this.friendRequest.delete(id);
+
+    if (affected) return deniedRequest;
+
+    throw new NotFoundException({
+      message: 'request not found',
+    });
   }
 
   async searchFriends(username: string, id: UUIDVersion) {
@@ -111,6 +129,13 @@ export class UserService {
   }
 
   async removeFriend(id: UUIDVersion) {
-    return (await this.friend.delete(id)).affected;
+    const friend = this.friend.findOne(id);
+    const { affected } = await this.friend.delete(id);
+
+    if (affected) return friend;
+
+    throw new NotFoundException({
+      message: 'friend not found',
+    });
   }
 }

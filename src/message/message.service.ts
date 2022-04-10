@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { UUIDVersion } from 'class-validator';
@@ -105,7 +109,6 @@ export class MessageService {
   }
 
   async editMessage(messageId: UUIDVersion, message: string) {
-    console.log('message', message, '\n', 'messageId', messageId);
     const { affected } = await this.message
       .createQueryBuilder('messages')
       .update()
@@ -115,7 +118,11 @@ export class MessageService {
       .where('id= :messageId', { messageId })
       .execute();
 
-    return affected ? 'update successful' : 'update unsuccessful';
+    if (affected) return this.message.findOne(messageId);
+
+    throw new NotFoundException({
+      message: 'update unsuccessful',
+    });
   }
 
   async deleteMessage(username: string, messageId: UUIDVersion[]) {
@@ -132,6 +139,10 @@ export class MessageService {
     });
     const { affected } = await this.message.delete({ id: In(messageId) });
 
-    return affected ? 'delete successful' : 'delete unsuccessful';
+    if (affected) return messages;
+
+    throw new NotFoundException({
+      message: 'delete unsuccessful',
+    });
   }
 }

@@ -27,16 +27,7 @@ export class MessageController {
 
   @UseGuards(JwtAuthGuard)
   @Post('sendMessage')
-  @UseInterceptors(
-    FilesInterceptor(
-      'file',
-      // , 20, {
-      //   storage: diskStorage({
-      //     destination: path.resolve(__dirname, './files'),
-      //   }),
-      // }
-    ),
-  )
+  @UseInterceptors(FilesInterceptor('files'))
   async sendMessage(
     @Req() req: any,
     @UploadedFiles() files: Array<Express.Multer.File>,

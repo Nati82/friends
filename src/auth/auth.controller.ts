@@ -5,21 +5,33 @@ import {
   Patch,
   Post,
   Req,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from './dtos/create-user.dto';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { User } from './entities/User.Entity';
+import { Serialize } from 'src/interceptors/serialize.interceptor';
+import { UserDto } from './dtos/user.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('auth')
+@Serialize(UserDto)
 export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('/signup')
-  async signup(@Body() body: CreateUserDto) {
-    return this.authService.signup(body);
+  @UseInterceptors(FileInterceptor('profile'))
+  async signup(
+    @Req() req: any,
+    @UploadedFile() file: Express.Multer.File,
+    @Body() body: CreateUserDto,
+  ) {
+    const { fileValidationError } = req;
+    return this.authService.signup(fileValidationError, file, body);
   }
 
   @UseGuards(LocalAuthGuard)
@@ -30,9 +42,15 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Patch('/update')
-  async update(@Req() req: any, @Body() params: Partial<User>) {
+  @UseInterceptors(FileInterceptor('profile'))
+  async update(
+    @Req() req: any,
+    @UploadedFile() file,
+    @Body() params: Partial<User>,
+  ) {
     const { id } = req.user;
-    return this.authService.update(id, params);
+    const { fileValidationError } = req;
+    return this.authService.update(id, fileValidationError, file, params);
   }
 
   @UseGuards(JwtAuthGuard)

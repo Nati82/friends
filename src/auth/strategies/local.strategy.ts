@@ -1,8 +1,12 @@
 import { Strategy } from 'passport-local';
 import { PassportStrategy } from '@nestjs/passport';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ClassSerializerInterceptor,
+  Injectable,
+  UnauthorizedException,
+  UseInterceptors,
+} from '@nestjs/common';
 import { JwtAuthService } from '../jwt-auth.service';
-import { User } from '../entities/User.Entity';
 
 @Injectable()
 export class LocalStrategy extends PassportStrategy(Strategy) {
@@ -10,7 +14,8 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
     super();
   }
 
-  async validate(username: string, password: string): Promise<User> {
+  @UseInterceptors(ClassSerializerInterceptor)
+  async validate(username: string, password: string) {
     const user = await this.jwtAuthService.validateUser(username, password);
     if (!user) {
       throw new UnauthorizedException();

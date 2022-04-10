@@ -1,5 +1,6 @@
 import {
   Body,
+  ClassSerializerInterceptor,
   Controller,
   Delete,
   Get,
@@ -7,11 +8,10 @@ import {
   Query,
   Req,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AddFriendDto } from './dtos/add-friend.dto';
-import { Friend } from './entities/Friend.Entity';
-import { FriendRequest } from './entities/FriendRequest.Entity';
 import { UserService } from './user.service';
 
 @Controller('user')
@@ -20,16 +20,15 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard)
   @Get('searchUser')
+  @UseInterceptors(ClassSerializerInterceptor)
   async searchUser(@Query('username') username: string) {
     return this.userService.searchUser(username);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('addFriend')
-  async addFriend(
-    @Req() req: any,
-    @Body() friend: AddFriendDto,
-  ): Promise<FriendRequest> {
+  @UseInterceptors(ClassSerializerInterceptor)
+  async addFriend(@Req() req: any, @Body() friend: AddFriendDto) {
     const { id } = req.user;
     return this.userService.addFriend(id, friend);
   }
@@ -43,7 +42,7 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard)
   @Post('acceptRequest')
-  async acceptRequest(@Req() req: any, @Body() request: any): Promise<Friend> {
+  async acceptRequest(@Req() req: any, @Body() request: any) {
     const userId = req.user.id;
     const { requestId } = request;
     return this.userService.acceptRequest(requestId, userId);
@@ -51,7 +50,7 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard)
   @Delete('denyRequest')
-  async denyRequest(@Body() request: any): Promise<number> {
+  async denyRequest(@Body() request: any) {
     const { requestId } = request;
     return this.userService.denyRequest(requestId);
   }
@@ -70,7 +69,7 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard)
   @Delete('removeFriend')
-  async removeRequest(@Body() request: any): Promise<number> {
+  async removeRequest(@Body() request: any) {
     const { friendId } = request;
     return this.userService.removeFriend(friendId);
   }
