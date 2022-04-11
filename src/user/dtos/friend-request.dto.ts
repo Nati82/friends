@@ -1,13 +1,15 @@
-import { Expose } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
 import { UserDto } from 'src/auth/dtos/user.dto';
 
 export class FriendReqDto {
   @Expose()
-  id: string;
+  id: number;
 
   @Expose()
+  @Type(() => UserDto)
   addedBy: UserDto;
 
   @Expose()
+  @Type(() => UserDto)
   requestedTo: UserDto;
 }

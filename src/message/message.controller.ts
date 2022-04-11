@@ -14,14 +14,17 @@ import {
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { UUIDVersion } from 'class-validator';
+import { Serialize } from 'src/interceptors/serialize.interceptor';
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { DeleteMessageDto } from './dtos/deleteMessages.dto';
 import { EditMessageDto } from './dtos/editMessage.dto';
 import { MessageDto } from './dtos/message.dto';
+import { ViewMessagesDto } from './dtos/viewMessages.dto';
 import { MessageService } from './message.service';
 
 @Controller('message')
+@Serialize(ViewMessagesDto)
 export class MessageController {
   constructor(private messageService: MessageService) {}
 

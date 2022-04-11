@@ -5,7 +5,7 @@ export class UserDto {
   access_token: string;
 
   @Expose()
-  id: number;
+  id: string;
 
   @Expose()
   username: string;

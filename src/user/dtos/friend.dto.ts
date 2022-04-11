@@ -1,4 +1,4 @@
-import { Expose } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
 import { UserDto } from 'src/auth/dtos/user.dto';
 
 export class FriendDto {
@@ -12,8 +12,10 @@ export class FriendDto {
   acUsername: string;
 
   @Expose()
+  @Type(() => UserDto)
   addedBy: UserDto;
 
   @Expose()
+  @Type(() => UserDto)
   acceptedBy: UserDto;
 }

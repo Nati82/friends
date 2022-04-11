@@ -10,8 +10,12 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import { UserDto } from 'src/auth/dtos/user.dto';
+import { Serialize } from 'src/interceptors/serialize.interceptor';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AddFriendDto } from './dtos/add-friend.dto';
+import { FriendReqDto } from './dtos/friend-request.dto';
+import { FriendDto } from './dtos/friend.dto';
 import { UserService } from './user.service';
 
 @Controller('user')
@@ -20,14 +24,14 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard)
   @Get('searchUser')
-  @UseInterceptors(ClassSerializerInterceptor)
+  @Serialize(UserDto)
   async searchUser(@Query('username') username: string) {
     return this.userService.searchUser(username);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('addFriend')
-  @UseInterceptors(ClassSerializerInterceptor)
+  @Serialize(FriendReqDto)
   async addFriend(@Req() req: any, @Body() friend: AddFriendDto) {
     const { id } = req.user;
     return this.userService.addFriend(id, friend);
@@ -35,6 +39,7 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard)
   @Get('getFriendRequests')
+  @Serialize(FriendReqDto)
   async getFriendRequests(@Req() req: any) {
     const requestedTo = req.user.id;
     return this.userService.getFriendRequests(requestedTo);
@@ -42,6 +47,7 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard)
   @Post('acceptRequest')
+  @Serialize(FriendDto)
   async acceptRequest(@Req() req: any, @Body() request: any) {
     const userId = req.user.id;
     const { requestId } = request;
@@ -50,6 +56,7 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard)
   @Delete('denyRequest')
+  @Serialize(FriendReqDto)
   async denyRequest(@Body() request: any) {
     const { requestId } = request;
     return this.userService.denyRequest(requestId);
@@ -57,18 +64,21 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard)
   @Get('searchFriends')
+  @Serialize(FriendDto)
   async searchFriends(@Query('username') username: string, @Req() req: any) {
     return this.userService.searchFriends(username, req.user.id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('friends')
+  @Serialize(FriendDto)
   async friends(@Req() req: any) {
     return this.userService.friends(req.user.id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Delete('removeFriend')
+  @Serialize(FriendDto)
   async removeRequest(@Body() request: any) {
     const { friendId } = request;
     return this.userService.removeFriend(friendId);

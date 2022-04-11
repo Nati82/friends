@@ -33,12 +33,13 @@ export class UserService {
       addedBy: addedById,
       requestedTo: requestedToId,
     };
-    const newFriend = this.friendRequest.create(request);
+    const result = this.friendRequest.create(request);
+    const newFriend = await this.friendRequest.save(result);
 
     if (newFriend) return newFriend;
 
     throw new BadRequestException({
-      message: 'create unsuccessful',
+      message: 'friend request unsuccessful',
     });
   }
 
