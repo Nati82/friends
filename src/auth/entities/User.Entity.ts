@@ -4,12 +4,14 @@ import {
   AfterUpdate,
   Entity,
   Column,
-  PrimaryGeneratedColumn
+  PrimaryGeneratedColumn,
+  OneToMany,
 } from 'typeorm';
+import { Profile } from './Profile.Entity';
 
 @Entity('users')
 export class User {
-  @PrimaryGeneratedColumn("uuid")
+  @PrimaryGeneratedColumn('uuid')
   id: number;
 
   @Column({ unique: true })
@@ -33,8 +35,8 @@ export class User {
   @Column()
   bio: string;
 
-  @Column()
-  profile: string;
+  @OneToMany(() => Profile, (profile) => profile.user)
+  profile: Profile[];
 
   @AfterInsert()
   logInsert() {

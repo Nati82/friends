@@ -12,14 +12,17 @@ import { JwtAuthService } from './jwt-auth.service';
 import * as fs from 'fs';
 import { MulterModule } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
+import { Profile } from './entities/Profile.Entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, Profile]),
     MulterModule.register({
       storage: diskStorage({
         destination: async function (req, _file, cb) {
-          const user = req.body['username'];
+          const user = req.body['username']
+            ? req.body['username']
+            : req.user['username'];
           await fs.promises.mkdir(`./files/${user}/profile`, {
             recursive: true,
           });

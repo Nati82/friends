@@ -9,10 +9,11 @@ import { Friend } from './user/entities/Friend.Entity';
 import { FriendRequest } from './user/entities/FriendRequest.Entity';
 import { MessageModule } from './message/message.module';
 import { Message } from './message/entities/Message.Entity';
+import { Profile } from './auth/entities/Profile.Entity';
+import { File } from './message/entities/File.Entity';
 
 @Module({
   imports: [
-    AuthModule,
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: 'localhost',
@@ -20,9 +21,10 @@ import { Message } from './message/entities/Message.Entity';
       username: 'postgres',
       password: 'postgres',
       database: 'friends',
-      entities: [User, Friend, FriendRequest, Message],
+      entities: [User, Friend, FriendRequest, Message, Profile, File],
       synchronize: true,
     }),
+    AuthModule,
     UserModule,
     MessageModule,
   ],

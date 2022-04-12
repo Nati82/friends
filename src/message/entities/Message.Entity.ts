@@ -1,6 +1,13 @@
 import { UUIDVersion } from 'class-validator';
 import { User } from 'src/auth/entities/User.Entity';
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  OneToMany,
+} from 'typeorm';
+import { File } from './File.Entity';
 
 @Entity('messages')
 export class Message {
@@ -10,8 +17,8 @@ export class Message {
   @Column()
   message: string;
 
-  @Column()
-  file: string;
+  @OneToMany(() => File, (file) => file.message)
+  files: File[];
 
   @Column('date')
   date: Date;

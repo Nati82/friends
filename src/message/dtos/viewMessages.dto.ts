@@ -1,5 +1,6 @@
 import { Expose, Type } from 'class-transformer';
 import { UserDto } from 'src/auth/dtos/user.dto';
+import { FileDto } from './file.dto';
 
 export class ViewMessagesDto {
   @Expose()
@@ -9,7 +10,8 @@ export class ViewMessagesDto {
   message: string;
 
   @Expose()
-  file: string;
+  @Type(() => FileDto)
+  files: FileDto[];
 
   @Expose()
   date: Date;

@@ -1,4 +1,5 @@
-import { Expose } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
+import { ProfileDto } from './profile.dto';
 
 export class UserDto {
   @Expose()
@@ -26,5 +27,6 @@ export class UserDto {
   bio: string;
 
   @Expose()
-  profile: string;
+  @Type(() => ProfileDto)
+  profile: ProfileDto[];
 }

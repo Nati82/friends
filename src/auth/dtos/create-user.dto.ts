@@ -1,4 +1,5 @@
 import { IsEmail, IsOptional, IsPhoneNumber, IsString } from 'class-validator';
+import { Profile } from '../entities/Profile.Entity';
 
 export class CreateUserDto {
   @IsString()
@@ -23,5 +24,5 @@ export class CreateUserDto {
   bio: string;
 
   @IsOptional()
-  profile: string;
+  profile: Profile[];
 }

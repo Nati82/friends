@@ -9,10 +9,11 @@ import { Message } from './entities/Message.Entity';
 import { MessageController } from './message.controller';
 import { MessageService } from './message.service';
 import { UserModule } from 'src/user/user.module';
+import { File } from './entities/File.Entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Message]),
+    TypeOrmModule.forFeature([Message, File]),
     MulterModule.register({
       storage: diskStorage({
         destination: async function (req, _file, cb) {
